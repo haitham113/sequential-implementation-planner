@@ -14,11 +14,25 @@ Run this before returning a generated prompt pack.
 - [ ] Each milestone is coherent and independently verifiable.
 - [ ] Future functionality is explicitly excluded from earlier milestones where needed.
 
+## Status tracking
+- [ ] Every generated milestone heading has exactly one canonical status flag.
+- [ ] Every generated prompt heading has exactly one canonical status flag.
+- [ ] The Milestone Gates table contains a `Status` column.
+- [ ] Every Milestone Gates Status cell matches its milestone heading.
+- [ ] Every prompt explicitly updates its own status before ending.
+- [ ] Every milestone child prompt inspects sibling statuses, recomputes the parent milestone, and synchronizes the table.
+- [ ] Milestone COMPLETE requires all required child prompts COMPLETE plus a satisfied gate.
+- [ ] Verification/review/read-only prompts permit only status bookkeeping edits to the playbook.
+- [ ] Fix prompt completion handles both "findings fixed and revalidated" and "completed review says no changes required."
+- [ ] Standalone final prompts explicitly update only their own status.
+- [ ] Verification `FAIL` / `NOT VERIFIED` is not confused with prompt execution status.
+
 ## Prompt loop
 - [ ] Prompt 0 plans only.
 - [ ] Prompt 0A challenges the plan.
-- [ ] Each milestone has implementation, verification, focused review(s), and fix/revalidation.
-- [ ] Verification/review prompts do not modify code.
+- [ ] Prompt 0 and Prompt 0A are children of Milestone 0 or another explicit planning milestone.
+- [ ] Each implementation milestone has implementation, verification, focused review(s), and fix/revalidation.
+- [ ] Verification/review prompts do not modify implementation code.
 - [ ] Fix prompts address approved findings only.
 
 ## Evidence
