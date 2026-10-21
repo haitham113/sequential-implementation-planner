@@ -20,6 +20,20 @@ A good gate usually proves:
 4. required environment compatibility;
 5. regression safety.
 
+## Gate status and milestone roll-up
+
+Prompt execution status and gate outcome are separate.
+
+A milestone may be `[🟢 COMPLETE]` only when:
+- every required child prompt is `[🟢 COMPLETE]`; and
+- the gate is satisfied by observed evidence.
+
+A gate may be treated as satisfied by `PASS`, or by an explicit owner acceptance of a non-spec-breaking limitation when the generated playbook allows that exception and records the acceptance.
+
+If verification returns `FAIL` or `NOT VERIFIED`, the verification prompt may still be COMPLETE, but the milestone must remain incomplete unless the gate is later satisfied under the rule above.
+
+After any child prompt updates status, apply `references/status-tracking.md` and synchronize the milestone heading with the Milestone Gates Status cell.
+
 ## Regression discipline
 
 From the second milestone onward:
@@ -45,6 +59,8 @@ Use exactly:
 
 `NOT VERIFIED` is not failure, but it cannot be treated as pass.
 
+These are evidence/result states, not the four heading status flags.
+
 ## Final readiness
 
 Final readiness should aggregate the project's real acceptance target:
@@ -57,3 +73,5 @@ Final readiness should aggregate the project's real acceptance target:
 - public portfolio publication.
 
 End with one unambiguous verdict appropriate to the target, e.g. `READY FOR RELEASE` / `NOT READY FOR RELEASE`.
+
+A standalone final-readiness prompt updates only its own heading status. Its heading may be `[🟢 COMPLETE]` even when the readiness verdict is `NOT READY FOR RELEASE`, because execution status records whether the check ran to completion, not whether the product passed.
