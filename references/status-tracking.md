@@ -38,13 +38,14 @@ A focused review may be `[🟢 COMPLETE]` even when it reports Critical or High 
 For every generated prompt:
 
 1. When execution begins, change only that prompt heading from `[⚪ NOT STARTED]` to `[🟡 IN PROGRESS]` unless it already has a terminal status.
-2. Perform the prompt's work.
-3. Before ending, set the prompt heading to its actual terminal status:
+2. If the prompt belongs to a milestone, immediately recompute the parent milestone and synchronize the Milestone Gates table after that start-status change.
+3. Perform the prompt's work.
+4. Before ending, set the prompt heading to its actual terminal status:
    - `[🟢 COMPLETE]` when the prompt reached its defined stopping point and recorded the result;
    - `[🔴 BLOCKED]` when it cannot reach that stopping point because of a real blocker;
    - leave `[🟡 IN PROGRESS]` only when execution is intentionally interrupted before a terminal result.
-4. If the prompt belongs to a milestone, recompute the parent milestone and synchronize the Milestone Gates table before ending.
-5. If the prompt is a standalone final check with no parent milestone, update only its own heading.
+5. If the prompt belongs to a milestone, recompute the parent milestone and synchronize the Milestone Gates table again before ending.
+6. If the prompt is a standalone final check with no parent milestone, update only its own heading.
 
 ## Milestone roll-up algorithm
 
