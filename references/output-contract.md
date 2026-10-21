@@ -69,9 +69,9 @@ Every generated milestone and prompt heading must contain exactly one canonical 
 
 The generated document should instruct the operator to:
 1. start one prompt and set that prompt heading to `[🟡 IN PROGRESS]`;
-2. perform the prompt and record actual evidence/results;
-3. before ending, update that prompt to its terminal execution status;
-4. for milestone child prompts, inspect every sibling prompt, recompute the parent milestone, and synchronize the Milestone Gates Status cell;
+2. for milestone child prompts, immediately inspect every sibling prompt, recompute the parent milestone, and synchronize the Milestone Gates Status cell;
+3. perform the prompt and record actual evidence/results;
+4. before ending, update that prompt to its terminal execution status and repeat the milestone roll-up/synchronization;
 5. run verification without modifying implementation code;
 6. run focused review(s) without modifying implementation code;
 7. decide which findings are justified;
@@ -166,6 +166,8 @@ Every implementation prompt should include:
 - milestone gate;
 - "Stop after this milestone.";
 - required status reconciliation before ending.
+
+For transaction/order-sensitive workflows, spell out atomic steps when that materially improves correctness.
 
 ## Verification prompt contract
 
