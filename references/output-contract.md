@@ -1,6 +1,6 @@
 # Output Contract
 
-Generate one project-specific Markdown execution manual. Adapt names (`Phase` vs `Milestone`) to the project.
+Generate one project-specific Markdown execution manual. Adapt names (`Phase` vs `Milestone`) to the project, but preserve the status rules from `references/status-tracking.md`.
 
 ## Required top-level structure
 
@@ -20,60 +20,67 @@ Use this file together with:
 ...
 
 ## Milestone Gates
-| Milestone | Gate before continuing |
-| --- | --- |
-| 0. Plan | ... |
+| Milestone | Status | Gate before continuing |
+| --- | --- | --- |
+| 0. Plan | [⚪ NOT STARTED] | ... |
 ...
 
-# Prompt 0 — Repository Assessment and Implementation Plan
-```text
-...
-```
+# Milestone 0 — Plan [⚪ NOT STARTED]
 
-# Prompt 0A — Challenge the Plan
+## Prompt 0 — Repository Assessment and Implementation Plan [⚪ NOT STARTED]
 ```text
 ...
 ```
 
-# Milestone 1 — <Name>
-## Prompt 1 — Implement
+## Prompt 0A — Challenge the Plan [⚪ NOT STARTED]
 ```text
 ...
 ```
-## Prompt 1A — Verify
+
+# Milestone 1 — <Name> [⚪ NOT STARTED]
+
+## Prompt 1 — Implement [⚪ NOT STARTED]
 ```text
 ...
 ```
-## Prompt 1B — <Focused Review>
+## Prompt 1A — Verify [⚪ NOT STARTED]
 ```text
 ...
 ```
-## Prompt 1C — Fix and Revalidate
+## Prompt 1B — <Focused Review> [⚪ NOT STARTED]
+```text
+...
+```
+## Prompt 1C — Fix and Revalidate [⚪ NOT STARTED]
 ```text
 ...
 ```
 ...
 
-# Final ...
+# Final Readiness Check [⚪ NOT STARTED]
+```text
 ...
 ```
+```
 
-Every executable agent prompt must be fenced as `text`.
+Every generated milestone and prompt heading must contain exactly one canonical status flag from `references/status-tracking.md`: `[🟢 COMPLETE]`, `[🟡 IN PROGRESS]`, `[🔴 BLOCKED]`, or `[⚪ NOT STARTED]`. Every executable agent prompt must be fenced as `text`.
 
 ## Working Method content
 
 The generated document should instruct the operator to:
-1. run one implementation prompt;
-2. inspect the result;
-3. run verification without modifying code;
-4. run focused review(s) without modifying code;
-5. decide which findings are justified;
-6. run the fix prompt for approved findings only;
-7. re-run validation and the milestone gate;
-8. commit verified work;
-9. continue only after the gate passes.
+1. start one prompt and set that prompt heading to `[🟡 IN PROGRESS]`;
+2. for milestone child prompts, immediately inspect every sibling prompt, recompute the parent milestone, and synchronize the Milestone Gates Status cell;
+3. perform the prompt and record actual evidence/results;
+4. before ending, update that prompt to its terminal execution status and repeat the milestone roll-up/synchronization;
+5. run verification without modifying implementation code;
+6. run focused review(s) without modifying implementation code;
+7. decide which findings are justified;
+8. run the fix prompt for approved findings only;
+9. re-run validation and the milestone gate;
+10. commit verified work;
+11. continue only after the milestone is `[🟢 COMPLETE]`.
 
-State that a failed gate remains failed until fixed or explicitly accepted as a non-spec-breaking limitation.
+State that a failed gate remains unsatisfied until fixed or explicitly accepted by the owner as a non-spec-breaking limitation where the playbook permits that exception. A prompt may be COMPLETE even when its verification result is `FAIL` or `NOT VERIFIED`; this never makes the parent milestone complete by itself.
 
 ## Global Rules content
 
@@ -88,13 +95,29 @@ Adapt these rules to the project:
 - do not silently change product behavior;
 - run real checks and report actual results;
 - use `NOT VERIFIED` for blocked proof;
+- keep prompt/milestone status durable and synchronized;
+- never mark a milestone COMPLETE unless all required children are COMPLETE and its gate is satisfied;
+- treat status reconciliation as the only permitted playbook edit inside otherwise read-only prompts;
 - update affected docs;
 - after implementation/fixes report files changed, decisions, commands, actual results, limitations, remaining risks, docs, and suggested Conventional Commit.
 
+## Mandatory status instruction
+
+Every prompt family below must explicitly include the appropriate required status footer from `references/status-tracking.md`.
+
+For milestone child prompts, the footer must require:
+- updating the prompt's own heading status;
+- inspecting every sibling prompt in the current milestone;
+- recomputing the parent milestone;
+- synchronizing the Milestone Gates Status cell;
+- enforcing that milestone COMPLETE requires every required child prompt to be COMPLETE plus a satisfied gate.
+
+For standalone final checks that do not belong to a milestone, require only self-status update.
+
 ## Prompt 0 contract
 
-Prompt 0 must:
-- modify nothing;
+Prompt 0 belongs to Milestone 0 and must:
+- modify no implementation code;
 - inspect all authoritative context;
 - propose the full milestone order;
 - identify existing code to reuse;
@@ -103,11 +126,12 @@ Prompt 0 must:
 - identify risks, documentation, and meaningful commit boundaries;
 - surface contradictions, missing prerequisites, unclear requirements, unnecessary complexity, and weak build order;
 - recommend the smallest production-quality choice;
-- stop after the plan.
+- stop after the plan;
+- perform required status reconciliation for itself and Milestone 0.
 
 ## Prompt 0A contract
 
-Choose 2–4 relevant reviewer personas. Challenge:
+Prompt 0A belongs to Milestone 0. Choose 2–4 relevant reviewer personas. Challenge:
 - sequencing;
 - dependency assumptions;
 - premature abstraction;
@@ -125,7 +149,7 @@ Return:
 4. Scope to cut/defer first
 5. Final recommended order
 
-Modify nothing.
+Modify no implementation code. Perform required status reconciliation before ending.
 
 ## Implementation prompt contract
 
@@ -140,30 +164,36 @@ Every implementation prompt should include:
 - commands/flows to actually run;
 - documentation updates;
 - milestone gate;
-- "Stop after this milestone."
+- "Stop after this milestone.";
+- required status reconciliation before ending.
 
 For transaction/order-sensitive workflows, spell out atomic steps when that materially improves correctness.
 
 ## Verification prompt contract
 
 Verification prompts:
-- modify nothing;
+- modify no implementation code/configuration/data except when the verification procedure itself necessarily exercises the system;
+- permit only the playbook status-bookkeeping edit outside those test effects;
 - execute relevant checks;
 - test behavior, not merely code shape;
 - include negative cases;
 - use real runtime/database/browser/network/integration resources where material;
 - return `PASS`, `FAIL`, or `NOT VERIFIED` plus evidence;
-- never say something merely "should work".
+- may be marked `[🟢 COMPLETE]` after faithfully recording `FAIL` or `NOT VERIFIED`;
+- never say something merely "should work";
+- perform required status reconciliation before ending.
 
 ## Focused review contract
 
 Review prompts:
-- modify nothing;
+- modify no implementation code/configuration;
+- permit only the playbook status-bookkeeping edit;
 - adopt a relevant skeptical specialist role;
 - attempt realistic failure/abuse cases;
 - inspect both implementation and observed behavior where appropriate;
 - classify findings `Critical`, `High`, `Medium`, `Low`;
-- include evidence, impact, affected path when possible, and smallest correct fix.
+- include evidence, impact, affected path when possible, and smallest correct fix;
+- perform required status reconciliation before ending.
 
 ## Fix/revalidate contract
 
@@ -173,7 +203,9 @@ Fix prompts:
 - do not add future features;
 - re-run all relevant validation and regressions;
 - report actual results;
-- do not pass while unresolved Critical/High issues violate the gate.
+- are COMPLETE only when accepted findings are fixed and revalidated, or when the completed review explicitly records that no changes are required and the fix prompt records that fact;
+- do not make the parent milestone COMPLETE while unresolved Critical/High issues violate the gate;
+- perform required status reconciliation before ending.
 
 ## Final prompt families
 
@@ -186,9 +218,13 @@ Include only when applicable:
 - public repository/release safety check;
 - final readiness check tied to Definition of Done or acceptance criteria.
 
+If a final prompt belongs to a named final milestone, use normal child-to-parent roll-up. If it is standalone, it must update only its own heading status before ending.
+
+Read-only final audits/verifications permit only status bookkeeping edits to the playbook.
+
 The final readiness table should use:
 
 | Requirement | Evidence | Status | Required Action |
 | --- | --- | --- | --- |
 
-with status limited to `PASS`, `FAIL`, `NOT VERIFIED`.
+with result status limited to `PASS`, `FAIL`, `NOT VERIFIED`. This readiness result column is distinct from the prompt heading execution-status flag.

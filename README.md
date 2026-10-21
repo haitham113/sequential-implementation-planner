@@ -14,11 +14,12 @@ Given a specification and optional repository context, the skill generates a Mar
 
 - source-of-truth precedence;
 - working method and global rules;
-- evidence-based milestone gates;
+- durable prompt/milestone status flags with parent roll-up tracking;
+- evidence-based milestone gates with synchronized status;
 - architecture/repository planning prompt;
 - challenge-the-plan prompt;
 - per-milestone implementation prompts;
-- non-mutating verification prompts;
+- non-mutating verification prompts with status-bookkeeping exception;
 - project-specific adversarial review prompts;
 - fix/revalidation prompts;
 - regression checks;
@@ -40,7 +41,8 @@ It also should not be used when the idea is still too vague to specify or when a
 │   ├── output-contract.md
 │   ├── project-classification.md
 │   ├── quality-gates.md
-│   └── review-catalog.md
+│   ├── review-catalog.md
+│   └── status-tracking.md
 ├── examples/
 ├── evals/
 ├── scripts/
@@ -64,6 +66,17 @@ The expected output is a file similar to:
 SUBSCRIPTION_BILLING_SEQUENTIAL_IMPLEMENTATION_AND_REVIEW_PROMPTS.md
 ```
 
+## Status tracking
+
+Generated playbooks use exactly one heading flag per milestone and prompt:
+
+- `[🟢 COMPLETE]`
+- `[🟡 IN PROGRESS]`
+- `[🔴 BLOCKED]`
+- `[⚪ NOT STARTED]`
+
+Every milestone child prompt updates its own heading, recomputes its parent from all sibling prompts plus the milestone gate, and keeps the Milestone Gates Status cell synchronized. Verification and review prompts remain read-only except for this status bookkeeping.
+
 ## Design principles
 
 - smallest useful milestone set;
@@ -72,7 +85,8 @@ SUBSCRIPTION_BILLING_SEQUENTIAL_IMPLEMENTATION_AND_REVIEW_PROMPTS.md
 - real proof before progression;
 - reviews shaped to actual failure modes;
 - regression protection across milestones;
-- truthful `PASS` / `FAIL` / `NOT VERIFIED` states;
+- durable prompt/milestone status reconciliation;
+- truthful `PASS` / `FAIL` / `NOT VERIFIED` evidence states;
 - progressive disclosure in the skill itself.
 
 ## Validation

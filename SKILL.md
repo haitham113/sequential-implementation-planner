@@ -5,20 +5,21 @@ description: "Generate a project-specific sequential implementation and review p
 
 # Sequential Implementation Planner
 
-Turn an approved project or feature specification into a disciplined, project-specific AI implementation playbook. The playbook controls execution order, evidence gates, focused reviews, fixes, regression checks, and final readiness. It does **not** implement the target project.
+Turn an approved project or feature specification into a disciplined, project-specific AI implementation playbook. The playbook controls execution order, evidence gates, focused reviews, fixes, regression checks, durable execution status, and final readiness. It does **not** implement the target project.
 
 ## Core Invariants
 
 1. **Specification first**: Identify the authoritative product/technical source of truth before planning work.
 2. **One milestone at a time**: The generated playbook must never instruct an implementation agent to build all milestones in one run.
 3. **Evidence before progression**: Every milestone has a checkable gate. Implementation alone is not completion.
-4. **Review is separate from implementation**: Verification and adversarial review prompts do not modify code.
+4. **Review is separate from implementation**: Verification and adversarial review prompts do not modify implementation code; status bookkeeping is the only permitted playbook edit.
 5. **Risk-shaped reviews**: Review prompts are selected from the actual risks of the milestone, not copied mechanically.
 6. **Regression preservation**: Later milestones re-check important behavior proven earlier.
 7. **Truthful validation**: Never claim a command, test, deployment, integration, browser flow, migration, or benchmark passed unless it was actually executed and observed. Use `NOT VERIFIED` when proof is unavailable.
 8. **Smallest useful plan**: Use the fewest milestones that preserve safe sequencing, testability, and review quality.
 9. **Existing-system awareness**: For existing repositories, plan the delta, reuse working code, and protect unrelated behavior.
 10. **No hidden invention**: Surface contradictions, assumptions, missing decisions, and unresolved prerequisites explicitly.
+11. **Durable status reconciliation**: Every generated milestone and prompt heading carries exactly one supported status flag. Every prompt updates its own status before ending; milestone prompts then recompute the parent milestone and synchronize the Milestone Gates table.
 
 ## Map of Content
 
@@ -26,11 +27,12 @@ Turn an approved project or feature specification into a disciplined, project-sp
 |---|---|
 | `references/project-classification.md` | Determining greenfield vs feature/refactor/migration/etc. and choosing milestone shape |
 | `references/output-contract.md` | Rendering the final Markdown playbook and every prompt family |
+| `references/status-tracking.md` | Applying prompt status flags, milestone roll-up rules, and read-only bookkeeping exceptions |
 | `references/review-catalog.md` | Selecting specialized adversarial reviews from milestone risks |
 | `references/quality-gates.md` | Designing milestone gates, regression rules, and final readiness checks |
 | `references/authoring-checklist.md` | Final self-review before returning the generated playbook |
 
-Do not load every reference automatically. Read only the references needed for the current planning branch.
+Do not load every reference automatically. Read only the references needed for the current planning branch, except `references/status-tracking.md`, which is mandatory whenever rendering a playbook.
 
 ## Procedure
 
@@ -64,12 +66,12 @@ Inline check:
 - [ ] No milestone exists only to imitate another project.
 
 ### Step 5 — Generate planning and challenge prompts
-- **Action**: Use `references/output-contract.md` to generate Prompt 0 and Prompt 0A.
-- **Key Point**: Prompt 0 plans without editing. Prompt 0A challenges the proposed plan from project-appropriate expert perspectives.
+- **Action**: Use `references/output-contract.md` to generate Milestone 0 with Prompt 0 and Prompt 0A.
+- **Key Point**: Prompt 0 plans without implementation edits. Prompt 0A challenges the proposed plan from project-appropriate expert perspectives.
 - **Why**: Challenging the plan before coding is cheaper than discovering sequencing errors after implementation begins.
 
 ### Step 6 — Generate each milestone loop
-- **Action**: For each milestone, generate the implementation prompt, verification prompt, one or more justified specialist reviews, and fix/revalidation prompt.
+- **Action**: For each milestone, generate the implementation prompt, verification prompt, one or more justified specialist reviews, and fix/revalidation prompt. Apply `references/status-tracking.md` to every heading and prompt ending.
 - **Key Point**: Select reviews using `references/review-catalog.md`; do not mechanically generate the same review titles for every milestone.
 - **Why**: Authentication, concurrency, browser lifecycle, financial integrity, migration safety, accessibility, and queue reliability fail in different ways.
 
@@ -79,12 +81,12 @@ The default loop is:
 
 ### Step 7 — Add regression and final gates
 - **Action**: Read `references/quality-gates.md` and add cross-milestone regression checks plus final audit/readiness prompts appropriate to the delivery target.
-- **Key Point**: Previously verified critical paths remain protected after later changes.
-- **Why**: A new feature is not progress if it silently breaks an earlier gate.
+- **Key Point**: Previously verified critical paths remain protected after later changes, and milestone status never becomes COMPLETE unless its children are complete and its gate is satisfied.
+- **Why**: A new feature is not progress if it silently breaks an earlier gate or if bookkeeping claims completion prematurely.
 
 ### Step 8 — Render and self-review the playbook
 - **Action**: Produce one complete Markdown document following `references/output-contract.md`, then run `references/authoring-checklist.md` against it.
-- **Key Point**: Every generated coding-agent prompt must be directly copyable and bounded to its current phase.
+- **Key Point**: Every generated coding-agent prompt must be directly copyable, bounded to its current phase, and include its status reconciliation instruction.
 - **Why**: The output is an execution manual, not an essay about good engineering.
 
 ## Required Output Behavior
@@ -98,9 +100,8 @@ The document must include, when applicable:
 - authoritative source-of-truth statement
 - Working Method
 - Global Rules
-- Milestone Gates
-- Prompt 0 — assessment/plan
-- Prompt 0A — challenge plan
+- Milestone Gates with synchronized Status column
+- Milestone 0 — planning and challenge prompts
 - sequential milestone prompt families
 - project-specific final polish/hardening
 - final critical-path rehearsal when meaningful
@@ -111,7 +112,7 @@ The document must include, when applicable:
 - final readiness check when the project has a delivery target
 - concise final principle
 
-Omit sections that do not apply. Do not inflate the playbook with ceremonial prompts.
+Every milestone and prompt heading must contain exactly one supported status flag from `references/status-tracking.md`. Omit sections that do not apply. Do not inflate the playbook with ceremonial prompts.
 
 ## Anti-Rationalization Guardrails
 
@@ -119,6 +120,8 @@ Omit sections that do not apply. Do not inflate the playbook with ceremonial pro
 |---|---|---|
 | “Ten phases looked good before, so use ten again.” | Choose phase count from dependencies and risks. | Fixed templates create useless work. |
 | “Implementation passed, so the gate passes.” | Verification evidence is mandatory. | Presence of code does not prove behavior. |
+| “A prompt ran, so mark its milestone complete.” | Recompute from all child prompts and the gate. | Prompt execution status and milestone success are different concerns. |
+| “Read-only means verification cannot update status.” | Permit only status reconciliation edits to the playbook. | Durable bookkeeping must survive read-only review/verification steps. |
 | “Use one generic senior review everywhere.” | Reviews must match milestone failure modes. | Generic review misses domain-specific hazards. |
 | “The spec is silent, so choose silently.” | State the assumption or unresolved decision. | Hidden invention changes product behavior. |
 | “Mocks are enough for everything.” | Use real environments where the behavior materially depends on them. | Mocks cannot prove integration/runtime behavior. |
@@ -131,9 +134,13 @@ A generated playbook is complete only when:
 
 - milestone order is justified by dependencies and risk;
 - each milestone has a measurable gate;
-- verification is non-mutating and evidence-based;
+- every milestone and prompt heading has exactly one supported status flag;
+- every prompt contains explicit self-status update behavior;
+- every milestone child prompt contains parent roll-up and Milestone Gates synchronization behavior;
+- verification/review prompts are non-mutating except for status reconciliation;
 - focused reviews match the milestone's failure modes;
 - fix prompts stay inside current scope and re-run relevant proof;
 - prior critical behavior is protected by regression checks;
+- final standalone checks have explicit self-status rules;
 - final readiness is tied to actual acceptance/release evidence;
 - no command/test/deployment is represented as successful without actual execution.
