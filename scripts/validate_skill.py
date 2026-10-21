@@ -7,6 +7,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "SKILL.md"
+STATUS = ROOT / "references" / "status-tracking.md"
+OUTPUT_CONTRACT = ROOT / "references" / "output-contract.md"
 
 errors: list[str] = []
 
@@ -54,6 +56,7 @@ else:
 required = [
     "references/project-classification.md",
     "references/output-contract.md",
+    "references/status-tracking.md",
     "references/review-catalog.md",
     "references/quality-gates.md",
     "references/authoring-checklist.md",
@@ -63,6 +66,35 @@ required = [
 for rel in required:
     if not (ROOT / rel).exists():
         errors.append(f"required repository file missing: {rel}")
+
+flags = [
+    "[🟢 COMPLETE]",
+    "[🟡 IN PROGRESS]",
+    "[🔴 BLOCKED]",
+    "[⚪ NOT STARTED]",
+]
+
+if STATUS.exists():
+    status_text = STATUS.read_text(encoding="utf-8")
+    for flag in flags:
+        if flag not in status_text:
+            errors.append(f"status tracking reference missing canonical flag: {flag}")
+    if "Milestone Gates" not in status_text or "Status" not in status_text:
+        errors.append("status tracking reference must define Milestone Gates synchronization")
+    if "sole permitted mutation" not in status_text and "sole permitted" not in status_text:
+        errors.append("status tracking reference must define the read-only bookkeeping exception")
+
+if OUTPUT_CONTRACT.exists():
+    output_text = OUTPUT_CONTRACT.read_text(encoding="utf-8")
+    if "| Milestone | Status | Gate before continuing |" not in output_text:
+        errors.append("output contract must include a Status column in Milestone Gates")
+    for flag in flags:
+        if flag not in output_text:
+            errors.append(f"output contract missing canonical status flag: {flag}")
+    if "every sibling prompt" not in output_text.lower():
+        errors.append("output contract must require sibling inspection for milestone roll-up")
+    if "every required child prompt" not in output_text.lower():
+        errors.append("output contract must require all child prompts complete before milestone completion")
 
 if errors:
     print("Skill validation: FAIL")
